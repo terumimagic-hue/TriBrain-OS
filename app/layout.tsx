@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TriBrain OS",
+  title: "BookBrain OS",
   description:
-    "An AI council. ChatGPT + Claude + Gemini answer in parallel, then synthesize one final answer."
+    "Fully automated AI book creation and knowledge accumulation. Gemini researches, Claude writes, James commercializes."
 };
 
 export default function RootLayout({

@@ -15,6 +15,8 @@ export interface ProviderAnswer {
   content: string;
   latencyMs: number;
   ok: true;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 export interface ProviderError {

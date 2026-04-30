@@ -1,5 +1,5 @@
 {
-  "name": "tribrain-os",
+  "name": "bookbrain-os",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,20 +7,25 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/generative-ai": "^0.24.0",
+    "better-sqlite3": "^11.5.0",
     "clsx": "^2.1.1",
+    "docx": "^9.0.3",
     "lucide-react": "^0.469.0",
     "next": "14.2.18",
     "openai": "^4.77.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^20.17.10",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
@@ -29,6 +34,7 @@
     "eslint-config-next": "14.2.18",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }

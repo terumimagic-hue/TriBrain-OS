@@ -1,141 +1,112 @@
 "use client";
 
-import { useState } from "react";
-import PromptInput from "@/components/PromptInput";
-import ModeSelector from "@/components/ModeSelector";
-import AnswerPanel from "@/components/AnswerPanel";
-import SynthesisPanel from "@/components/SynthesisPanel";
-import DebatePanel from "@/components/DebatePanel";
-import HistoryList from "@/components/HistoryList";
-import type { CouncilSession, ModeId, ProviderId } from "@/lib/types";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import type { BookProjectRow } from "@/lib/db/models";
 
-const PROVIDERS: ProviderId[] = ["openai", "anthropic", "gemini"];
+interface ProjectWithCost extends BookProjectRow {
+  cost: { tokens_in: number; tokens_out: number; usd: number };
+}
 
 export default function HomePage() {
-  const [mode, setMode] = useState<ModeId>("general");
-  const [debate, setDebate] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState<CouncilSession | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [historyKey, setHistoryKey] = useState(0);
+  const [projects, setProjects] = useState<ProjectWithCost[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  async function runCouncil(prompt: string) {
-    setLoading(true);
-    setError(null);
-    setSession({
-      id: "pending",
-      prompt,
-      mode,
-      createdAt: new Date().toISOString(),
-      results: []
-    });
-    try {
-      const res = await fetch("/api/council", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, mode, debate, synthesize: true })
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `HTTP ${res.status}`);
-      }
-      const data = (await res.json()) as CouncilSession;
-      setSession(data);
-      setHistoryKey((k) => k + 1);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadSession(id: string) {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/history/${id}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = (await res.json()) as CouncilSession;
-      setSession(data);
-      setMode(data.mode);
-      setDebate(Boolean(data.debateRounds?.length));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const resultsByProvider = (() => {
-    const map = new Map<ProviderId, CouncilSession["results"][number]>();
-    const lastRound =
-      session?.debateRounds?.[session.debateRounds.length - 1]?.results ??
-      session?.results ??
-      [];
-    for (const r of lastRound) map.set(r.provider, r);
-    return map;
-  })();
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then(setProjects)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-10">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          TriBrain <span className="text-zinc-500">OS</span>
-        </h1>
-        <p className="text-zinc-400 text-sm mt-1">
-          One question, three minds. ChatGPT, Claude, and Gemini answer in
-          parallel — then a final judge merges the best of all three.
-        </p>
+    <main className="mx-auto max-w-6xl px-6 py-10">
+      <header className="flex items-start justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            BookBrain <span className="text-zinc-500">OS</span>
+          </h1>
+          <p className="text-zinc-400 text-sm mt-1 max-w-2xl">
+            Fully automated AI book creation and knowledge accumulation. Gemini researches,
+            Claude writes, James commercializes — and every finished book teaches the system how
+            to write the next one.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            href="/projects/new"
+            className="rounded-xl bg-white text-black px-4 py-2 text-sm font-medium hover:bg-zinc-200"
+          >
+            New book
+          </Link>
+          <Link
+            href="/knowledge"
+            className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900"
+          >
+            Knowledge
+          </Link>
+          <Link
+            href="/tribrain"
+            className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900"
+          >
+            TriBrain →
+          </Link>
+        </div>
       </header>
 
-      <section className="mb-6 space-y-4">
-        <ModeSelector value={mode} onChange={setMode} disabled={loading} />
-        <PromptInput
-          onSubmit={runCouncil}
-          loading={loading}
-          debate={debate}
-          onToggleDebate={setDebate}
-        />
-        {error && (
-          <div className="rounded-lg border border-red-900 bg-red-950/40 px-3 py-2 text-sm text-red-300">
-            {error}
-          </div>
-        )}
-      </section>
+      {loading && <div className="text-zinc-500 text-sm">Loading…</div>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            {PROVIDERS.map((p) => (
-              <AnswerPanel
-                key={p}
-                provider={p}
-                result={resultsByProvider.get(p)}
-                loading={loading}
-              />
-            ))}
-          </div>
-
-          <SynthesisPanel
-            content={session?.synthesis}
-            provider={session?.synthesisProvider}
-            loading={loading}
-          />
-
-          {session?.debateRounds && session.debateRounds.length > 0 && (
-            <DebatePanel rounds={session.debateRounds} />
-          )}
+      {!loading && projects.length === 0 && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-10 text-center">
+          <h2 className="text-xl font-semibold">No books yet</h2>
+          <p className="text-zinc-400 mt-2">
+            Start with one idea. The pipeline does the rest.
+          </p>
+          <Link
+            href="/projects/new"
+            className="inline-block mt-6 rounded-xl bg-white text-black px-5 py-2 text-sm font-medium hover:bg-zinc-200"
+          >
+            Create your first book
+          </Link>
         </div>
+      )}
 
-        <aside>
-          <HistoryList refreshKey={historyKey} onSelect={loadSession} />
-        </aside>
-      </div>
-
-      <footer className="mt-12 text-center text-xs text-zinc-600">
-        Local-first. API keys live only in your <code>.env</code>. History
-        stored in <code>data/sessions.json</code>.
-      </footer>
+      <ul className="grid gap-3">
+        {projects.map((p) => (
+          <li key={p.id}>
+            <Link
+              href={`/projects/${p.id}`}
+              className="block rounded-2xl border border-zinc-800 bg-zinc-950 p-5 hover:border-zinc-600"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs text-zinc-500 mb-1 flex items-center gap-2">
+                    <span className="uppercase tracking-wider">{p.status}</span>
+                    {p.current_step && (
+                      <span className="rounded-full bg-zinc-800 px-2 py-0.5">
+                        {p.current_step}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-semibold">
+                    {p.title || p.working_title}
+                  </h3>
+                  <p className="text-sm text-zinc-400 mt-1 line-clamp-2">{p.idea}</p>
+                </div>
+                <div className="text-right text-xs text-zinc-500 whitespace-nowrap">
+                  <div>{new Date(p.created_at).toLocaleString()}</div>
+                  <div className="mt-1">
+                    {p.language.toUpperCase()} · {p.market}
+                  </div>
+                  <div className="mt-1 font-mono">
+                    ${p.cost.usd.toFixed(3)} · {(p.cost.tokens_in + p.cost.tokens_out).toLocaleString()} tok
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
