@@ -3,6 +3,16 @@
 All notable changes to BookBrain OS are documented here.
 Versioning follows semver. Dates are UTC.
 
+## Unreleased
+
+- Refund policy aligned across the repository to a single beta rule:
+  non-refundable except in cases of critical malfunction. `LICENSE`,
+  `app/refund/page.tsx`, `app/faq/page.tsx`, `docs/FAQ.md`, and the
+  seller refund-email template in `docs/SELLER_GUIDE.md` are now
+  consistent. Sales copy lives at `docs/LP_GUMROAD.md`. Demo video
+  literal narration lives at `docs/DEMO_NARRATION.md` (alongside the
+  existing producer beat sheet at `docs/DEMO_SCRIPT.md`).
+
 ## v1.0.0-beta.1 — Sellable beta
 
 The product is feature-complete for self-hosted sale. Headline:

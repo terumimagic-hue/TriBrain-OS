@@ -137,6 +137,9 @@ until the end of the current billing period.
 
 ### How do I get a refund?
 
-Subscriptions: cancel at any time (no pro-rata). Lifetime: 14 days from
-purchase if you've generated 3 books or fewer with the activated key.
-Email the address in your purchase receipt. Full text at `/refund`.
+Beta lifetime sales are non-refundable except in cases of critical
+malfunction that prevents the Software from being installed or run on a
+supported platform. Subscriptions can be canceled any time at `/billing`;
+cancellation takes effect at the end of the current billing period.
+Provider API charges are billed by the provider directly using your keys
+and are not refundable through us. Full text at `/refund`.

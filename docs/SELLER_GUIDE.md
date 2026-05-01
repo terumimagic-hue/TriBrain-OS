@@ -141,19 +141,26 @@ the endpoint returns 403.
 
 ### Refund request
 
+The beta policy is **non-refundable except for critical malfunction**.
+Use this template:
+
 > Subject: Re: refund
 >
-> Per our refund policy (https://yourdomain.com/refund), lifetime licenses
-> are refundable within 14 days if you've generated 3 books or fewer.
-> Your install reports {N} books — {eligible / not eligible}.
+> Thanks for reaching out. Per our refund policy
+> (https://yourdomain.com/refund), beta lifetime sales are
+> non-refundable except when the Software cannot be installed or run on
+> a supported platform.
 >
-> {If eligible:} I've issued the refund through Stripe. The license key
-> {key} has been revoked. Stripe usually takes 5–10 business days to
-> return funds to the original card.
+> {If reported issue is a real malfunction:} I want to make this right.
+> Can you send me the output of `npm run sanity` from your install, the
+> exact error message you're seeing, and your OS / Node version? If we
+> can't get it working together, I'll issue a full refund and revoke
+> the license.
 >
-> {If not eligible:} Unfortunately I can't process a refund. If you've
-> hit a specific blocker I haven't fixed, tell me what it is — I read
-> every reply.
+> {If the report is "didn't like the output" / "got busy" / similar:}
+> I understand. Per the policy, I can't issue a refund for that. If
+> there's a specific blocker — a bug, missing feature, unclear docs —
+> tell me what it is and I'll see what I can do for the next release.
 
 To revoke a license:
 ```bash

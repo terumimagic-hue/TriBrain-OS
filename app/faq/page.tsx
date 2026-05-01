@@ -55,7 +55,7 @@ const QAS: QA[] = [
   },
   {
     q: "How do I get a refund?",
-    a: <>Subscriptions: cancel at any time. Lifetime: 14 days from purchase if you've generated 3 books or fewer. <Link href="/refund" className="underline">Full policy →</Link></>
+    a: <>Beta lifetime sales are non-refundable except in cases of critical malfunction that prevents installation or running. Subscriptions can be canceled any time at <Link href="/billing" className="underline">/billing</Link>. <Link href="/refund" className="underline">Full policy →</Link></>
   }
 ];
 
