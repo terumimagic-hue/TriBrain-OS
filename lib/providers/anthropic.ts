@@ -1,12 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ProviderResult } from "../types";
 import { approxTokens } from "./cost";
+import { resolveEnv } from "../db/state";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+function defaults() {
+  const env = resolveEnv();
+  return { model: env.anthropicModel, apiKey: env.anthropicKey };
+}
 
 function client(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
+  const { apiKey } = defaults();
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set (Settings or .env)");
   return new Anthropic({ apiKey });
 }
 
@@ -16,7 +20,7 @@ export async function askAnthropic(
   opts: { model?: string; maxTokens?: number; temperature?: number } = {}
 ): Promise<ProviderResult> {
   const start = Date.now();
-  const model = opts.model || MODEL;
+  const model = opts.model || defaults().model;
   try {
     const anthropic = client();
     const message = await anthropic.messages.create({

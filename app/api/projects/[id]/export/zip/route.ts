@@ -6,6 +6,7 @@ import archiver from "archiver";
 import { PassThrough } from "node:stream";
 import { Projects, Exports } from "@/lib/db/models";
 import { exportDir } from "@/lib/db/client";
+import { ensureFeature } from "@/lib/license/guards";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -16,6 +17,8 @@ export async function GET(
 ): Promise<Response> {
   const project = Projects.get(params.id);
   if (!project) return NextResponse.json({ error: "not found" }, { status: 404 });
+  const feature = ensureFeature("zipExport");
+  if (!feature.ok) return NextResponse.json({ error: feature.error, hint: feature.hint }, { status: feature.status });
 
   const projectDir = path.join(await exportDir(), project.id);
   const exportsList = Exports.byProject(project.id);

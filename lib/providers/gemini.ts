@@ -1,12 +1,16 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ProviderResult } from "../types";
 import { approxTokens } from "./cost";
+import { resolveEnv } from "../db/state";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+function defaults() {
+  const env = resolveEnv();
+  return { model: env.geminiModel, apiKey: env.geminiKey };
+}
 
 function client(): GoogleGenerativeAI {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+  const { apiKey } = defaults();
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not set (Settings or .env)");
   return new GoogleGenerativeAI(apiKey);
 }
 
@@ -16,7 +20,7 @@ export async function askGemini(
   opts: { model?: string; temperature?: number } = {}
 ): Promise<ProviderResult> {
   const start = Date.now();
-  const model = opts.model || MODEL;
+  const model = opts.model || defaults().model;
   try {
     const genAI = client();
     const m = genAI.getGenerativeModel({

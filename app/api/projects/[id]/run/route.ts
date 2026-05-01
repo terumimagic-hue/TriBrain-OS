@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runStep, runFullPipeline } from "@/lib/pipeline/runner";
 import type { StepId } from "@/lib/pipeline/steps";
+import { ensureCostBelowLimit, ensureFeature } from "@/lib/license/guards";
 
 export const runtime = "nodejs";
 export const maxDuration = 600;
@@ -13,6 +14,14 @@ export async function POST(
   const step = body?.step as StepId | "all" | undefined;
   if (!step) {
     return NextResponse.json({ error: "step is required" }, { status: 400 });
+  }
+  const cost = ensureCostBelowLimit();
+  if (!cost.ok) {
+    return NextResponse.json({ error: cost.error, hint: cost.hint }, { status: cost.status });
+  }
+  if ((step === "export" || step === "all")) {
+    const docx = ensureFeature("docxExport");
+    if (!docx.ok) return NextResponse.json({ error: docx.error, hint: docx.hint }, { status: docx.status });
   }
   try {
     if (step === "all") {

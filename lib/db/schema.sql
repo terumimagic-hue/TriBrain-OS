@@ -213,3 +213,51 @@ CREATE TABLE IF NOT EXISTS cost_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_cost_project ON cost_log(project_id);
+
+-- Licensing + product state
+CREATE TABLE IF NOT EXISTS license_key (
+  id TEXT PRIMARY KEY,
+  key TEXT NOT NULL UNIQUE,
+  plan TEXT NOT NULL,                                  -- free | starter | pro | studio
+  status TEXT NOT NULL DEFAULT 'active',               -- active | expired | revoked
+  source TEXT NOT NULL DEFAULT 'manual',               -- manual | stripe | trial
+  customer_email TEXT,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  stripe_payment_intent_id TEXT,
+  monthly_project_limit INTEGER,
+  expires_at TEXT,
+  activated_at TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_license_status ON license_key(status);
+
+CREATE TABLE IF NOT EXISTS app_state (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  id INTEGER PRIMARY KEY,
+  default_author TEXT,
+  default_language TEXT NOT NULL DEFAULT 'en',
+  default_market TEXT NOT NULL DEFAULT 'US',
+  default_tone TEXT,
+  default_trim_w REAL NOT NULL DEFAULT 6,
+  default_trim_h REAL NOT NULL DEFAULT 9,
+  default_paper_type TEXT NOT NULL DEFAULT 'bw_white',
+  cost_limit_monthly_usd REAL NOT NULL DEFAULT 0,      -- 0 disables
+  openai_model TEXT,
+  anthropic_model TEXT,
+  gemini_model TEXT,
+  embedding_model TEXT,
+  openai_key_override TEXT,                            -- if set, overrides env
+  anthropic_key_override TEXT,
+  gemini_key_override TEXT,
+  synthesis_provider TEXT,
+  demo_mode INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+INSERT OR IGNORE INTO app_settings (id) VALUES (1);

@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { CoverAssets, Costs, Kdp, Projects } from "@/lib/db/models";
 import { uploadsDir } from "@/lib/cover/render";
 import { newId } from "@/lib/db/client";
+import { ensureCostBelowLimit, ensureFeature } from "@/lib/license/guards";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -24,7 +25,13 @@ export async function POST(
   const project = Projects.get(params.id);
   if (!project) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const feature = ensureFeature("aiCoverGen");
+  if (!feature.ok) return NextResponse.json({ error: feature.error, hint: feature.hint }, { status: feature.status });
+  const cost = ensureCostBelowLimit();
+  if (!cost.ok) return NextResponse.json({ error: cost.error, hint: cost.hint }, { status: cost.status });
+
+  const { Settings } = await import("@/lib/db/state");
+  const apiKey = Settings.get().openai_key_override || process.env.OPENAI_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "OPENAI_API_KEY not set" }, { status: 400 });
 
   const body = (await req.json().catch(() => ({}))) as Body;

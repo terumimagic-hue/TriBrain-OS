@@ -1,13 +1,16 @@
 import OpenAI from "openai";
 import type { ProviderResult } from "../types";
 import { approxTokens } from "./cost";
+import { resolveEnv } from "../db/state";
 
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o";
-const EMBED_MODEL = process.env.OPENAI_EMBED_MODEL || "text-embedding-3-small";
+function defaults() {
+  const env = resolveEnv();
+  return { model: env.openaiModel, embedModel: env.embeddingModel, apiKey: env.openaiKey };
+}
 
 function client(): OpenAI {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
+  const { apiKey } = defaults();
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not set (Settings or .env)");
   return new OpenAI({ apiKey });
 }
 
@@ -17,7 +20,7 @@ export async function askOpenAI(
   opts: { model?: string; temperature?: number; maxTokens?: number } = {}
 ): Promise<ProviderResult> {
   const start = Date.now();
-  const model = opts.model || MODEL;
+  const model = opts.model || defaults().model;
   try {
     const openai = client();
     const completion = await openai.chat.completions.create({
@@ -53,13 +56,18 @@ export async function askOpenAI(
 export async function embedOpenAI(text: string): Promise<{ vector: number[]; model: string; tokens: number } | null> {
   try {
     const openai = client();
-    const r = await openai.embeddings.create({ model: EMBED_MODEL, input: text });
+    const m = defaults().embedModel;
+    const r = await openai.embeddings.create({ model: m, input: text });
     return {
       vector: r.data[0].embedding,
-      model: EMBED_MODEL,
+      model: m,
       tokens: r.usage?.total_tokens ?? approxTokens(text)
     };
   } catch {
     return null;
   }
+}
+
+export function openaiClientForImages(): OpenAI {
+  return client();
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { PROVIDER_LABELS } from "@/lib/providers";
+import { PROVIDER_LABELS } from "@/lib/providers/labels";
 import type { DebateRound, ProviderId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 

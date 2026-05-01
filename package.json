@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "issue-license": "tsx scripts/issue-license.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -24,6 +25,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sharp": "^0.33.5",
+    "stripe": "^17.4.0",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {

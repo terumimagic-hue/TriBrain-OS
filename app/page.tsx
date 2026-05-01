@@ -8,15 +8,41 @@ interface ProjectWithCost extends BookProjectRow {
   cost: { tokens_in: number; tokens_out: number; usd: number };
 }
 
+interface QuotaInfo {
+  plan: { id: string; label: string; monthlyProjectLimit: number };
+  used: number;
+  limit: number;
+  remaining: number | null;
+  exceeded: boolean;
+}
+
 export default function HomePage() {
   const [projects, setProjects] = useState<ProjectWithCost[]>([]);
+  const [quota, setQuota] = useState<QuotaInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/projects")
-      .then((r) => r.json())
-      .then(setProjects)
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const setupRes = await fetch("/api/setup/state");
+        const setup = await setupRes.json();
+        if (!cancelled && !setup.onboarded) {
+          window.location.replace("/onboard");
+          return;
+        }
+      } catch {}
+      try {
+        const r = await fetch("/api/projects");
+        const data = await r.json();
+        if (cancelled) return;
+        setProjects(data.projects || []);
+        setQuota(data.quota || null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -48,17 +74,48 @@ export default function HomePage() {
           <Link href="/estimate" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
             Estimate
           </Link>
-          <Link href="/guide" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
-            Guide
+          <Link href="/settings" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            Settings
           </Link>
-          <Link href="/welcome" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
-            Landing
+          <Link href="/license" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            License
+          </Link>
+          <Link href="/diagnostics" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            Diag
+          </Link>
+          <Link href="/guide" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
+            Guide
           </Link>
           <Link href="/tribrain" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
             TriBrain →
           </Link>
         </div>
       </header>
+
+      {quota && (
+        <div className={
+          "rounded-2xl border px-4 py-3 mb-6 text-sm flex flex-wrap items-center justify-between gap-3 " +
+          (quota.exceeded ? "border-amber-700 bg-amber-950/30 text-amber-100" : "border-zinc-800 bg-zinc-950 text-zinc-300")
+        }>
+          <div>
+            <span className="text-xs uppercase tracking-wider text-zinc-500 mr-2">Plan</span>
+            <span className="font-semibold">{quota.plan.label}</span>
+            <span className="text-zinc-500 mx-2">·</span>
+            <span>
+              {quota.used}/{quota.limit === 0 ? "∞" : quota.limit} books this month
+            </span>
+            {quota.exceeded && <span className="ml-2 text-xs">— limit reached</span>}
+          </div>
+          <div className="flex gap-2">
+            <Link href="/license" className="text-xs rounded-lg border border-zinc-700 px-3 py-1 hover:bg-zinc-900">
+              License
+            </Link>
+            <Link href="/pricing" className="text-xs rounded-lg bg-white text-black px-3 py-1 font-medium">
+              Upgrade
+            </Link>
+          </div>
+        </div>
+      )}
 
       {loading && <div className="text-zinc-500 text-sm">Loading…</div>}
 
