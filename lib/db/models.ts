@@ -84,6 +84,23 @@ export const Projects = {
   },
   setStep(id: string, step: string, status: BookProjectRow["status"] = "running"): void {
     Projects.update(id, { current_step: step, status });
+  },
+  remove(id: string): void {
+    getDB().prepare("DELETE FROM book_project WHERE id = ?").run(id);
+  },
+  duplicate(id: string): BookProjectRow | null {
+    const src = Projects.get(id);
+    if (!src) return null;
+    return Projects.create({
+      workingTitle: `${src.working_title} (copy)`,
+      idea: src.idea,
+      language: src.language,
+      market: src.market,
+      tone: src.tone ?? undefined,
+      estimatedWords: src.estimated_words ?? undefined,
+      referenceBooks: J.parse<string[]>(src.reference_books, []),
+      seriesId: src.series_id ?? null
+    });
   }
 };
 
@@ -446,6 +463,21 @@ export const Series = {
   },
   list(): SeriesProfileRow[] {
     return getDB().prepare("SELECT * FROM series_profile ORDER BY created_at DESC").all() as SeriesProfileRow[];
+  },
+  update(id: string, patch: Partial<SeriesProfileRow>): void {
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    for (const [k, v] of Object.entries(patch)) {
+      if (k === "id") continue;
+      fields.push(`${k} = ?`);
+      values.push(v);
+    }
+    if (!fields.length) return;
+    values.push(id);
+    getDB().prepare(`UPDATE series_profile SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  },
+  remove(id: string): void {
+    getDB().prepare("DELETE FROM series_profile WHERE id = ?").run(id);
   }
 };
 
@@ -494,6 +526,72 @@ export const Exports = {
   },
   byProject(projectId: string): ExportFileRow[] {
     return getDB().prepare("SELECT * FROM export_file WHERE project_id = ? ORDER BY created_at DESC").all(projectId) as ExportFileRow[];
+  }
+};
+
+export interface CoverAssetRow {
+  id: string;
+  project_id: string;
+  origin: "upload" | "ai";
+  prompt: string | null;
+  filename: string;
+  path: string;
+  width: number | null;
+  height: number | null;
+  bytes: number | null;
+  created_at: string;
+}
+
+export const CoverAssets = {
+  add(projectId: string, origin: "upload" | "ai", filename: string, filePath: string, bytes: number, width: number | null, height: number | null, prompt?: string | null): CoverAssetRow {
+    const db = getDB();
+    const id = newId("ca");
+    db.prepare(
+      `INSERT INTO cover_asset (id, project_id, origin, prompt, filename, path, width, height, bytes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(id, projectId, origin, prompt ?? null, filename, filePath, width, height, bytes);
+    return CoverAssets.get(id)!;
+  },
+  get(id: string): CoverAssetRow | null {
+    return (getDB().prepare("SELECT * FROM cover_asset WHERE id = ?").get(id) as CoverAssetRow) ?? null;
+  },
+  byProject(projectId: string): CoverAssetRow[] {
+    return getDB().prepare("SELECT * FROM cover_asset WHERE project_id = ? ORDER BY created_at DESC").all(projectId) as CoverAssetRow[];
+  },
+  remove(id: string): void {
+    getDB().prepare("DELETE FROM cover_asset WHERE id = ?").run(id);
+  }
+};
+
+export interface CoverDesignRow {
+  id: string;
+  project_id: string;
+  kind: "ebook" | "paperback";
+  config: string;
+  asset_id: string | null;
+  updated_at: string;
+}
+
+export const CoverDesigns = {
+  upsert(projectId: string, kind: "ebook" | "paperback", config: unknown, assetId?: string | null): CoverDesignRow {
+    const db = getDB();
+    const existing = db.prepare("SELECT * FROM cover_design WHERE project_id = ? AND kind = ?")
+      .get(projectId, kind) as CoverDesignRow | undefined;
+    if (existing) {
+      db.prepare("UPDATE cover_design SET config = ?, asset_id = ?, updated_at = datetime('now') WHERE id = ?")
+        .run(J.stringify(config), assetId ?? null, existing.id);
+      return CoverDesigns.byProject(projectId, kind)!;
+    }
+    const id = newId("cd");
+    db.prepare(
+      "INSERT INTO cover_design (id, project_id, kind, config, asset_id) VALUES (?, ?, ?, ?, ?)"
+    ).run(id, projectId, kind, J.stringify(config), assetId ?? null);
+    return CoverDesigns.byProject(projectId, kind)!;
+  },
+  byProject(projectId: string, kind: "ebook" | "paperback"): CoverDesignRow | null {
+    return (getDB()
+      .prepare("SELECT * FROM cover_design WHERE project_id = ? AND kind = ? ORDER BY updated_at DESC LIMIT 1")
+      .get(projectId, kind) as CoverDesignRow) ?? null;
   }
 };
 

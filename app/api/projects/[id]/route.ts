@@ -15,6 +15,16 @@ import {
 
 export const runtime = "nodejs";
 
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+): Promise<Response> {
+  const project = Projects.get(params.id);
+  if (!project) return NextResponse.json({ error: "not found" }, { status: 404 });
+  Projects.remove(project.id);
+  return NextResponse.json({ ok: true });
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }

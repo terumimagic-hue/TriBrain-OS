@@ -17,7 +17,11 @@ npm-debug.log*
 
 data/*.db
 data/*.db-journal
+data/*.db-shm
+data/*.db-wal
 data/*.json
+data/exports/
+data/uploads/
 !data/.gitkeep
 
 next-env.d.ts

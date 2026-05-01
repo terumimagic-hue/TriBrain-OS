@@ -177,6 +177,30 @@ CREATE TABLE IF NOT EXISTS style_profile (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS cover_asset (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES book_project(id) ON DELETE CASCADE,
+  origin TEXT NOT NULL,         -- upload | ai
+  prompt TEXT,                  -- if origin = ai
+  filename TEXT NOT NULL,
+  path TEXT NOT NULL,
+  width INTEGER,
+  height INTEGER,
+  bytes INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cover_asset_project ON cover_asset(project_id);
+
+CREATE TABLE IF NOT EXISTS cover_design (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES book_project(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,           -- ebook | paperback
+  config TEXT NOT NULL,         -- JSON: { background, elements, paperback? }
+  asset_id TEXT REFERENCES cover_asset(id) ON DELETE SET NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_cover_design_project ON cover_design(project_id, kind);
+
 CREATE TABLE IF NOT EXISTS cost_log (
   id TEXT PRIMARY KEY,
   project_id TEXT REFERENCES book_project(id) ON DELETE SET NULL,

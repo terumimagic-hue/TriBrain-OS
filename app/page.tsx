@@ -32,23 +32,29 @@ export default function HomePage() {
             to write the next one.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Link
             href="/projects/new"
             className="rounded-xl bg-white text-black px-4 py-2 text-sm font-medium hover:bg-zinc-200"
           >
             New book
           </Link>
-          <Link
-            href="/knowledge"
-            className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900"
-          >
+          <Link href="/knowledge" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
             Knowledge
           </Link>
-          <Link
-            href="/tribrain"
-            className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900"
-          >
+          <Link href="/series" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            Series
+          </Link>
+          <Link href="/estimate" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            Estimate
+          </Link>
+          <Link href="/guide" className="rounded-xl border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-900">
+            Guide
+          </Link>
+          <Link href="/welcome" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
+            Landing
+          </Link>
+          <Link href="/tribrain" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
             TriBrain →
           </Link>
         </div>

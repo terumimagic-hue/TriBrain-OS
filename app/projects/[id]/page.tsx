@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import PipelineSteps from "@/components/PipelineSteps";
+import { useRouter } from "next/navigation";
 import CoverStudio from "@/components/CoverStudio";
 
 interface BookProjectRow {
@@ -123,8 +124,23 @@ interface ProjectData {
 }
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [data, setData] = useState<ProjectData | null>(null);
   const [tab, setTab] = useState<"pipeline" | "manuscript" | "kdp" | "research" | "cover" | "exports">("pipeline");
+
+  async function duplicateProject() {
+    const r = await fetch(`/api/projects/${params.id}/duplicate`, { method: "POST" });
+    if (r.ok) {
+      const copy = await r.json();
+      router.push(`/projects/${copy.id}`);
+    }
+  }
+
+  async function deleteProject() {
+    if (!confirm("Delete this project? Manuscript, KDP data, exports, and knowledge will be removed.")) return;
+    const r = await fetch(`/api/projects/${params.id}`, { method: "DELETE" });
+    if (r.ok) router.push("/");
+  }
 
   const refresh = useCallback(async () => {
     const r = await fetch(`/api/projects/${params.id}`, { cache: "no-store" });
@@ -153,6 +169,26 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
           <div className="text-right text-xs text-zinc-500 whitespace-nowrap">
             <div>Status: <span className="text-zinc-300 uppercase">{project.status}</span></div>
             <div className="font-mono mt-1">${cost.usd.toFixed(3)} · {(cost.tokens_in + cost.tokens_out).toLocaleString()} tok</div>
+            <div className="mt-2 flex gap-2 justify-end">
+              <a
+                href={`/api/projects/${project.id}/export/zip`}
+                className="rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] hover:bg-zinc-900"
+              >
+                Download ZIP
+              </a>
+              <button
+                onClick={duplicateProject}
+                className="rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] hover:bg-zinc-900"
+              >
+                Duplicate
+              </button>
+              <button
+                onClick={deleteProject}
+                className="rounded-lg border border-red-900 text-red-400 px-2.5 py-1 text-[11px] hover:bg-red-950/40"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -327,7 +363,15 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
         </div>
       )}
 
-      {tab === "cover" && <CoverStudio projectId={project.id} />}
+      {tab === "cover" && (
+        <CoverStudio
+          projectId={project.id}
+          workingTitle={project.working_title}
+          finalTitle={project.title}
+          coverPromptDefault={kdp?.cover_prompt || undefined}
+          authorDefault={kdp?.author_bio ? "James" : "James"}
+        />
+      )}
 
       {tab === "exports" && (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
