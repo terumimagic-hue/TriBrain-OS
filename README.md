@@ -1,149 +1,116 @@
 # BookBrain OS
 
-BookBrain OS is a fully automated AI book creation and knowledge accumulation system.
-It turns one book idea into a complete publishing package using specialized AI agents:
+**AI Publishing Engine.** One idea in. A complete publishing package out —
+manuscript, KDP listing, cover. Every finished book teaches the system how to
+write the next one.
 
-- **Gemini** — research, market analysis, fact checking
-- **Claude** — structure, chapter planning, long-form drafting, revision
-- **OpenAI / James** — concept, editorial, KDP packaging, knowledge ingestion
+> Self-hosted v1.0 (beta). Local-first, your API keys, your books, your
+> knowledge base. No vendor lock-in.
 
-Every completed book is analyzed and stored as reusable knowledge so future books
-inherit the author's style DNA, recurring concepts, series rules, and KDP positioning.
+---
 
-The repo also bundles **TriBrain OS** at `/tribrain` — the parallel-AI council
-(ChatGPT + Claude + Gemini answer one question side-by-side, then synthesize).
+## What it does
 
-## Pipeline
+You enter a single book idea. BookBrain OS runs a 10-step pipeline:
 
 ```
 Idea
- → Research          (Gemini)   market, reader, sources, risks
- → Concept           (James)    thesis, promise, go/no-go
- → Structure         (Claude)   TOC, chapter roles, pacing
- → Drafting          (Claude)   per-chapter prose
- → Editorial         (James)    diagnosis, severity, fixes
- → Fact Check        (Gemini)   factual / risky claims
- → Revision          (Claude)   per-chapter rewrite
- → KDP Package       (James)    title, description, 7 keywords, A+, cover prompt
- → Export            (system)   .md, .docx, reports, summary.json
- → Ingestion         (James)    distill into reusable knowledge
-                                                ↓
-                                     Knowledge base + Style profile
-                                                ↓
-                                       Used by the next book
+ → Research        (Gemini)   market, reader, sources, risks
+ → Concept         (James)    thesis, promise, go/no-go
+ → Structure      (Claude)    TOC, chapter roles, pacing
+ → Drafting       (Claude)    full chapter prose
+ → Editorial      (James)     diagnosis, severity, fixes
+ → Fact Check     (Gemini)    risky and unsupported claims
+ → Revision       (Claude)    per-chapter rewrite
+ → KDP Package    (James)     title, description, 7 keywords, A+ content
+ → Cover Studio   (sharp)     ebook PNG/JPG, paperback wraparound PDF
+ → Export         (system)    .docx, .md, reports, ZIP
+ → Ingestion      (James)     distill into reusable knowledge
+                                     ↓
+                          Knowledge base + Style profile
+                                     ↓
+                            Used by the next book
 ```
 
-Each step is **independent**, **resumable**, and **retryable**. Every agent run
-records its input, output, latency, and cost in SQLite.
+You ship a complete publishing package. The system gets stronger with every
+book.
 
-## Cover Studio
+## Headline features
 
-`/projects/:id/cover` exposes a Cover Studio that:
+- **3-agent pipeline.** Gemini researches, Claude writes, OpenAI/James
+  commercializes. Each step is independent, resumable, retryable.
+- **Cover Studio.** Real images, not templates. Ebook (1600×2560 PNG/JPG)
+  and paperback wraparound PDF with KDP-accurate spine math, bleed, safe
+  zone, and barcode reserve. Upload your own image or generate one with
+  `gpt-image-1`.
+- **Knowledge accumulation.** Every finished book is distilled into reusable
+  knowledge — concepts, style DNA, series rules, metaphors, lessons.
+  Embedded with `text-embedding-3-small` and threaded into the next book's
+  prompts via cosine similarity.
+- **License + Stripe.** HMAC-signed license keys (offline verification),
+  4 plans, project quotas, monthly cost caps. `/api/checkout` and webhook
+  issue licenses on payment.
+- **Onboarding wizard.** API key entry, live connection test, license
+  activation, sample project — done in under 10 minutes.
+- **Diagnostics.** Provider health, plan, quota, cost, storage, stuck-run
+  recovery. Backup the entire install to a single ZIP.
+- **Local-first.** SQLite, your API keys, your filesystem. No data leaves
+  your machine except the model API calls you authorize.
 
-- **Ebook**: fixed 1600 × 2560 px preset.
-- **Paperback**: arbitrary trim size (presets: 5×8, 5.5×8.5, 6×9, 7×10, 8.5×11, plus custom).
-  Computes spine width from page count + paper type (KDP-accurate),
-  total wraparound dimensions, 300 DPI pixel size, safe zone, bleed,
-  and an optional barcode-reserve area.
-- Outputs a print-ready template **PDF** with bleed/safe/spine guides,
-  plus a **metadata JSON**.
+Plus the original **TriBrain OS** 3-AI council bundled at `/tribrain`.
+
+## Pricing (suggested)
+
+| Plan       | Lifetime    | Subscription   | Books/month  |
+| ---------- | ----------- | -------------- | ------------ |
+| Free       | —           | —              | 1            |
+| Starter    | ¥49,800     | ¥9,800/mo      | 5            |
+| Pro        | ¥98,000     | ¥29,800/mo     | 20           |
+| Studio     | Contact     | Contact        | unlimited    |
+
+You also pay your model providers directly with your own keys
+(roughly **$1–6 per finished book** — see `/estimate`).
+
+Beta launch price: **¥29,800 lifetime** for the first 20 customers.
+
+## Install (5 minutes)
+
+```bash
+git clone <your-fork> bookbrain-os
+cd bookbrain-os
+cp .env.example .env
+# Edit .env: paste OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY
+npm install
+npm run dev
+# Open http://localhost:3000 — the onboarding wizard takes over from here.
+```
+
+Full guide: [docs/INSTALL_SELF_HOSTED.md](docs/INSTALL_SELF_HOSTED.md)
+Customer quick-start: [docs/CUSTOMER_QUICKSTART.md](docs/CUSTOMER_QUICKSTART.md)
+Selling it yourself: [docs/SELLER_GUIDE.md](docs/SELLER_GUIDE.md)
+FAQ: [docs/FAQ.md](docs/FAQ.md)
+Demo video script: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
 
 ## Tech
 
-- Next.js 14 / TypeScript / Tailwind
-- SQLite via `better-sqlite3` (no external DB)
-- OpenAI, Anthropic, Google Generative AI SDKs
-- Embeddings via `text-embedding-3-small`, cosine similarity in JS
-- `docx` for Word export, `pdf-lib` for cover PDFs
+Next.js 14 · TypeScript · Tailwind · SQLite (better-sqlite3) · OpenAI ·
+Anthropic · Google Generative AI · sharp · pdf-lib · docx · Stripe ·
+archiver.
 
-## Setup
+39 routes, 16 SQLite tables, 11 agents.
 
-```bash
-cp .env.example .env
-# Fill OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY
+## License
 
-npm install
-npm run dev
-```
+Commercial license — see [LICENSE](LICENSE).
+Single-install, no redistribution. Lifetime plans include 12 months of
+updates. Subscription plans include updates while the subscription is
+active.
 
-Open http://localhost:3000 and click **New book**.
-Or seed a demo project:
+## Status
 
-```bash
-npm run seed
-```
+v1.0.0-beta.1 — feature-complete and ready for paid beta sales. See
+[CHANGELOG.md](CHANGELOG.md).
 
-## Project layout
+## Contact
 
-```
-app/
-  page.tsx                    BookBrain dashboard
-  projects/new/page.tsx       Create project
-  projects/[id]/page.tsx      Pipeline / manuscript / KDP / research / cover / exports
-  knowledge/page.tsx          Search the knowledge base
-  tribrain/page.tsx           TriBrain OS (3-AI council)
-  api/projects/...            Project CRUD, run a step, manuscript, exports, cover
-  api/knowledge                List + semantic search
-  api/cover/preview            Live dimension calculator
-  api/council                  TriBrain endpoint
-lib/
-  db/schema.sql               14 tables
-  db/client.ts, models.ts     better-sqlite3 + typed accessors
-  providers/                  OpenAI / Anthropic / Gemini + cost
-  agents/                     12 agents (research → ingestion + retrieval)
-  pipeline/steps.ts, runner.ts
-  export/markdown.ts, docx.ts
-  cover/dimensions.ts, pdf.ts
-data/
-  bookbrain.db                SQLite (created on first run)
-  exports/<project_id>/       Generated .md / .docx / .pdf
-```
-
-## Database (14 models)
-
-`user`, `series_profile`, `book_project`, `agent_run`, `chapter`,
-`manuscript_version`, `research_note`, `editorial_note`, `kdp_metadata`,
-`export_file`, `knowledge_item`, `style_profile`, `source_reference`, `cost_log`.
-
-See `lib/db/schema.sql`.
-
-## Pricing notes
-
-`lib/providers/cost.ts` keeps an editable per-model price table.
-`cost_log` records every call (provider, model, input/output tokens, USD estimate).
-The dashboard shows live cost per project.
-
-## Replacing agents
-
-Each agent is a single module under `lib/agents/`. To replace one (e.g. swap
-the Editorial agent to Claude), open the module, change the `ask`/`askJSON`
-agent name, and redeploy. The pipeline runner reads the step → agent map from
-`lib/pipeline/steps.ts`.
-
-## Re-running and resuming
-
-- Per-step buttons in the UI re-run any step. The runner reads the latest
-  outputs of upstream steps from the DB, so you can edit chapters by hand
-  and re-run only Editorial / Revision / KDP / Export.
-- "Run all" runs the full pipeline sequentially and stops on the first error.
-
-## Knowledge accumulation
-
-When **Ingestion** runs, the book is distilled into reusable items
-(book summary, concepts, arguments, style DNA, series rules, metaphors,
-citations, lessons learned). Each item is embedded with
-`text-embedding-3-small` and stored in `knowledge_item.embedding`.
-
-When you create a **new** project, every step pulls relevant knowledge
-via cosine similarity, excluding the current project. The result is that
-future books gradually inherit the author's voice, avoid repeating
-themselves, and stay consistent within a series.
-
-## Caveats
-
-- Native bindings: `better-sqlite3` requires a build toolchain. On Linux/macOS
-  this is automatic; Windows may need `windows-build-tools`.
-- Long-running steps (drafting an entire manuscript) can take minutes. Each
-  chapter is a separate API call; partial progress is persisted.
-- Pricing in `cost.ts` is a public-estimate table; verify against current
-  provider docs.
+Issues, license recovery, refunds: see [SELLER_GUIDE.md](docs/SELLER_GUIDE.md).

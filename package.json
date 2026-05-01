@@ -1,6 +1,6 @@
 {
   "name": "bookbrain-os",
-  "version": "0.1.0",
+  "version": "1.0.0-beta.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
-    "issue-license": "tsx scripts/issue-license.ts"
+    "issue-license": "tsx scripts/issue-license.ts",
+    "sanity": "tsx scripts/sanity-check.ts",
+    "release:zip": "tsx scripts/release.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

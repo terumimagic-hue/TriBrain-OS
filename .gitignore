@@ -3,6 +3,7 @@ node_modules/
 out/
 build/
 dist/
+docs/screenshots/
 
 .env
 .env.local

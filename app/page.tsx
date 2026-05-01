@@ -86,6 +86,12 @@ export default function HomePage() {
           <Link href="/guide" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
             Guide
           </Link>
+          <Link href="/faq" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
+            FAQ
+          </Link>
+          <Link href="/changelog" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
+            Changelog
+          </Link>
           <Link href="/tribrain" className="rounded-xl border border-zinc-800 text-zinc-400 px-3 py-2 text-xs hover:bg-zinc-900">
             TriBrain →
           </Link>
